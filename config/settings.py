@@ -43,7 +43,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "oc_lettings_site.urls"
+ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
@@ -61,7 +61,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "oc_lettings_site.wsgi.application"
+WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database
@@ -103,7 +103,8 @@ TIME_ZONE = "CET"
 
 USE_I18N = True
 
-USE_L10N = True
+# Depreciated
+# USE_L10N = True
 
 USE_TZ = True
 
