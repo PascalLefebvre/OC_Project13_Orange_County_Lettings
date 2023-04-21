@@ -1,15 +1,13 @@
 """The unit tests for the oc_lettings_site index view."""
 
-from django.test import Client
 from django.urls import reverse
 
 import pytest
 
 
 @pytest.fixture()
-def http_response():
-    client = Client()
-    response = client.get(reverse("oc_lettings_site:index"))
+def http_response(client):
+    response = client.get(reverse("index"))
     return response
 
 
