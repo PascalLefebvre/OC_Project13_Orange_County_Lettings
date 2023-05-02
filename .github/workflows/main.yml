@@ -2,6 +2,11 @@ name: ci
 
 on: push
 
+env:
+  DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  IMAGE_NAME: ${{ vars.DOCKERHUB_USERNAME }}/oc_lettings:${{ github.sha }}
+
 jobs:
 
   build-app:
@@ -17,81 +22,54 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Lint with Flake8
-        run: |
-          flake8
+        run: flake8
       - name: Run Tests
-        run: |
-          pytest
-  
+        run: pytest
+
   build-image:
     needs: build-app
-    if: ${{ github.ref == 'refs/heads/deploy'}}
+    if: ${{ github.ref == 'refs/heads/main'}}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Docker Metadata action
-        id: meta
-        uses: docker/metadata-action@v4
+      - uses: actions/checkout@v3
+      - name: Build docker image
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }} .
+          docker save -o docker-image.tar ${{ env.IMAGE_NAME }}
+      - uses: actions/upload-artifact@v3
         with:
-          # list of Docker images to use as base name for tags
-          images: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/oc_lettings
-          # generate Docker tags based on the following events/attributes
-          tags: |
-            type=sha,format=long
+          name: docker-image-1
+          path: docker-image.tar
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build and export
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./Dockerfile
-          tags: ${{ steps.meta.outputs.tags }}
-          outputs: type=docker,dest=/tmp/myimage.tar
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: myimage
-          path: /tmp/myimage.tar
-
-  push-dockerhub:
+  push-image:
     needs: build-image
-    if: ${{ github.ref == 'refs/heads/deploy'}}
+    if: ${{ github.ref == 'refs/heads/main'}}
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Download artifact
-        uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v3
         with:
-          name: myimage
-          path: /tmp
-
-      - name: Load image
+          name: docker-image-1
+      - name: Push docker image
         run: |
-          docker load --input /tmp/myimage.tar
+          docker load -i docker-image.tar
+          docker login -u ${{ env.DOCKERHUB_USERNAME }} -p ${{ env.DOCKERHUB_TOKEN }}
+          docker push ${{ env.IMAGE_NAME }}
 
-      - name: Docker Metadata action
-        id: meta
-        uses: docker/metadata-action@v4
+  deploy-heroku:
+    needs: build-image
+    if: ${{ github.ref == 'refs/heads/main'}}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
         with:
-          images: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/oc_lettings
-          tags: |
-            type=sha,format=long
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Push image
+          name: docker-image-1
+      - name: Deploy docker image
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          APP_NAME: oc-lettings-pl
         run: |
-          docker push ${{ steps.meta.outputs.tags }}
+          docker load -i docker-image.tar
+          docker tag ${{ env.IMAGE_NAME }} registry.heroku.com/${{ env.APP_NAME }}/web
+          docker login --username=_ --password=${{ env.HEROKU_API_KEY }} registry.heroku.com
+          docker push registry.heroku.com/${{ env.APP_NAME }}/web
+          heroku container:release web -a ${{ env.APP_NAME }}

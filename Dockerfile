@@ -1,4 +1,4 @@
-# Use with `docker-compose`
+# Use for the production image.
 
 # Pull base image
 FROM python:3.11.3-slim-bullseye
@@ -17,3 +17,5 @@ RUN pip install -r requirements.txt
 
 # Copy project
 COPY . .
+
+CMD gunicorn --bind 0.0.0.0:${PORT} oc_lettings_site.wsgi
