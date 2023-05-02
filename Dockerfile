@@ -1,5 +1,7 @@
+# Use with `docker-compose`
+
 # Pull base image
-FROM python:3.12.0a7-slim-bullseye
+FROM python:3.11.3-slim-bullseye
 
 # Set environment variables
 ENV PIP_DISABLE_PIP_VERSION_CHECK 1
