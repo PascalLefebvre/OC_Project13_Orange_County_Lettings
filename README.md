@@ -80,34 +80,46 @@ Utilisation de PowerShell, comme ci-dessus sauf :
 
 ### Fonctionnement
 
-- Le déploiement est déclenché à chaque mise à jour de la branche `main` sur [GitHub](https://github.com).
-- Le site web est déployé à condition que le [linting](https://flake8.pycqa.org/en/latest/) et les [tests](https://docs.pytest.org) ainsi que la construction de l'image [Docker](https://docs.docker.com/) réussissent.
-- La mise en oeuvre du pipeline CI/CD repose sur la plateforme [GitHub Actions](https://docs.github.com/fr/actions).
-- Le site web de production est hébergé sur la plateforme [Heroku](https://devcenter.heroku.com/) qui permet, via son registre de conteneurs, d'exécuter une image Docker déjà construite.
+- Le déploiement est déclenché à chaque mise à jour de la branche `main` sur [GitHub](https://github.com)
+- Le site web est déployé à condition que le [linting](https://flake8.pycqa.org/en/latest/) et les [tests](https://docs.pytest.org) ainsi que la construction de l'image [Docker](https://docs.docker.com/) réussissent
+- La mise en oeuvre du pipeline CI/CD repose sur la plateforme [GitHub Actions](https://docs.github.com/fr/actions)
+- Le site web de production est hébergé sur la plateforme [Heroku](https://devcenter.heroku.com/) qui permet, via son registre de conteneurs, d'exécuter une image Docker déjà construite
 
-Nota : A chaque déploiement, une nouvelle image Docker est générée. Elle est alors accessible sur la plateforme [DockerHub](https://hub.docker.com/) avec pour tag le `hash` du `commit` de Git correspondant.
+Nota : A chaque déploiement, une nouvelle image Docker est générée. Elle est alors accessible sur la plateforme [DockerHub](https://hub.docker.com/) avec pour tag le `hash` du `commit` de Git correspondant
 
 ### Configuration requise
 
-- Le code de l'application doit être hébergé sur un dépôt GitHub sur lequel vous avez tous les droits.
-- L'accès à un compte [DockerHub](https://hub.docker.com) pour le dépôt des images Docker.
-- L'accès à un compte [Heroku](https://id.heroku.com) pour la mise en production du site web.
+- Le code de l'application doit être hébergé sur un dépôt GitHub sur lequel vous avez tous les droits
+- L'accès à un compte [DockerHub](https://hub.docker.com) pour le dépôt des images Docker
+- L'accès à un compte [Heroku](https://id.heroku.com) pour la mise en production du site web
+- L'accès à un compte [Sentry](https://sentry.io/signup/) pour la surveillance de l'application
 
 ### Etapes à suivre
 
-- Préambule : pour créer les variables et les secrets nécessaires à l'authentification sur DockerHub et Heroku (voir ci-dessous), aller dans les `settings` du dépôt GitHub, menu `Security / Secrets and variables / Actions`, onglet `Secrets` ou `Variables` selon le cas.
+- Préambule : pour créer les variables et les secrets nécessaires à l'authentification sur DockerHub et Heroku (voir ci-dessous), aller dans les `settings` du dépôt GitHub, menu `Security / Secrets and variables / Actions`, onglet `Secrets` ou `Variables` selon le cas
 
 - Depuis le compte DockerHub :
-    - créer un `repository` ayant pour nom `oc_lettings`
-    - générer un `Access token` (menu `Account Settings / Security`) qu'il faut immédiatement enregistrer dans le `secret` GitHub nommé `DOCKERHUB_TOKEN`.
-- Sur GitHub, créer la variable `DOCKERHUB_USERNAME` avec pour valeur votre nom d'utilisateur sur DockerHub.
+  - créer un `repository` ayant pour nom `oc_lettings`
+  - générer un `Access token` (menu `Account Settings / Security`) qu'il faut immédiatement enregistrer dans le `secret` GitHub nommé `DOCKERHUB_TOKEN`.
+- Sur GitHub, créer la variable `DOCKERHUB_USERNAME` avec pour valeur votre nom d'utilisateur sur DockerHub
 
 - Depuis le compte Heroku :
-    - créer une nouvelle application dont le nom doit être enregistrée dans la variable GitHub nommée `HEROKU_APP_NAME`. Ce nom sera le préfixe de l'URL du site web en production
-    - dans les `settings` de l'application, ajouter la `secret key` Django en créant une `Config var` nommée `SECRET_KEY` avec pour valeur le résultat de la commande `python -c "import secrets; print(secrets.token_urlsafe(64))"`
-    - générer si elle n'existe pas l'`API KEY` (menu `Account settings` onglet `Account`) qu'il faut enregistrer dans le `secret` GitHub nommé `HEROKU_API_KEY`
-- Sur GitHub, créer la variable `HEROKU_EMAIL` avec pour valeur l'adresse email utilisée pour se connecter à Heroku.
+  - créer une nouvelle application dont le nom doit être enregistrée dans la variable GitHub nommée `HEROKU_APP_NAME`. Ce nom sera le préfixe de l'URL du site web en production
+  - dans les `settings` de l'application, ajouter la `secret key` Django en créant une `Config var` nommée `SECRET_KEY` avec pour valeur le résultat de la commande `python -c "import secrets; print(secrets.token_urlsafe(64))"`
+  - générer si elle n'existe pas l'`API KEY` (menu `Account settings` onglet `Account`) qu'il faut enregistrer dans le `secret` GitHub nommé `HEROKU_API_KEY`
+- Sur GitHub, créer la variable `HEROKU_EMAIL` avec pour valeur l'adresse email utilisée pour se connecter à Heroku
 
-- Après ces étapes de paramétrage, le pipeline CI/CD avec mise en production automatique du site web s'exécutera à chaque nouvelle mise à jour de la branche `main`. Le déroulement et le résultat de l'exécution du `workflow` correspondant est accessible via l'onglet `Actions` du dépôt GitHUb de l'application.
+- Après ces étapes de paramétrage, le pipeline CI/CD avec mise en production automatique du site web s'exécutera à chaque nouvelle mise à jour de la branche `main`. Le déroulement et le résultat de l'exécution du `workflow` correspondant est accessible via l'onglet `Actions` du dépôt GitHUb de l'application
 
-- Le site web en production est alors accessible à l'adresse `https://<HEROKU_APP_NAME>.herokuapp.com`.
+- Le site web en production est alors accessible à l'adresse `https://<HEROKU_APP_NAME>.herokuapp.com`
+
+### Surveillance et suivi des erreurs avec [Sentry](https://docs.sentry.io/platforms/python/)
+
+- Depuis le compte Sentry :
+  - créer un projet en sélectionnant comme plateforme `DJANGO` dans l'onglet `Server`
+  - copier la valeur du champ `DSN` accessible dans la rubrique `SDK SETUP / Client Keys (DSN)` des paramètres du projet nouvellement créé
+- Sur Heroku, créer une `Config var` nommée `SENTRY_DSN` en lui affectant la valeur du `DSN` ci-dessus
+
+- Tester le bon fonctionnement de la surveillance :
+  - en accédant à l'URL `https://<HEROKU_APP_NAME>.herokuapp.com/sentry-debug` pour générer une exception dans l'application
+  - en visualisant l'exception levée dans la section `Issues` du compte Sentry
