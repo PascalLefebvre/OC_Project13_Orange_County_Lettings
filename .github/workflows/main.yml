@@ -5,7 +5,7 @@ on: push
 env:
   DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-  IMAGE_NAME: ${{ vars.DOCKERHUB_USERNAME }}/oc_lettings:${{ github.sha }}
+  IMAGE_NAME: ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPO }}:${{ github.sha }}
 
 jobs:
 

@@ -78,6 +78,8 @@ Utilisation de PowerShell, comme ci-dessus sauf :
 
 ## Déploiement
 
+Le site web en production est accessible [ici](https://oc-lettings-pl.herokuapp.com/)
+
 ### Fonctionnement
 
 - Le déploiement est déclenché à chaque mise à jour de la branche `main` sur [GitHub](https://github.com)
@@ -85,7 +87,7 @@ Utilisation de PowerShell, comme ci-dessus sauf :
 - La mise en oeuvre du pipeline CI/CD repose sur la plateforme [GitHub Actions](https://docs.github.com/fr/actions)
 - Le site web de production est hébergé sur la plateforme [Heroku](https://devcenter.heroku.com/) qui permet, via son registre de conteneurs, d'exécuter une image Docker déjà construite
 
-Nota : A chaque déploiement, une nouvelle image Docker est générée. Elle est alors accessible sur la plateforme [DockerHub](https://hub.docker.com/) avec pour tag le `hash` du `commit` de Git correspondant
+Nota : A chaque déploiement, une nouvelle image Docker est générée et sauvegardée sur la plateforme [DockerHub](https://hub.docker.com/) avec pour tag le `hash` du `commit` de Git correspondant
 
 ### Configuration requise
 
@@ -96,10 +98,10 @@ Nota : A chaque déploiement, une nouvelle image Docker est générée. Elle est
 
 ### Etapes à suivre
 
-- Préambule : pour créer les variables et les secrets nécessaires à l'authentification sur DockerHub et Heroku (voir ci-dessous), aller dans les `settings` du dépôt GitHub, menu `Security / Secrets and variables / Actions`, onglet `Secrets` ou `Variables` selon le cas
+- Préambule : pour créer les variables et les secrets nécessaires à l'exécution du pipeline CI/CD sur GutHub Actions, aller dans les `settings` du dépôt GitHub, menu `Security / Secrets and variables / Actions`, onglet `Secrets` ou `Variables` selon le cas
 
 - Depuis le compte DockerHub :
-  - créer un `repository` ayant pour nom `oc_lettings`
+  - créer un `repository` dont le nom doit être enregistré sur GitHub dans la variable nommée`DOCKERHUB_REPO`
   - générer un `Access token` (menu `Account Settings / Security`) qu'il faut immédiatement enregistrer dans le `secret` GitHub nommé `DOCKERHUB_TOKEN`.
 - Sur GitHub, créer la variable `DOCKERHUB_USERNAME` avec pour valeur votre nom d'utilisateur sur DockerHub
 
@@ -121,5 +123,5 @@ Nota : A chaque déploiement, une nouvelle image Docker est générée. Elle est
 - Sur Heroku, créer une `Config var` nommée `SENTRY_DSN` en lui affectant la valeur du `DSN` ci-dessus
 
 - Tester le bon fonctionnement de la surveillance :
-  - en accédant à l'URL `https://<HEROKU_APP_NAME>.herokuapp.com/sentry-debug` pour générer une exception dans l'application
+  - en accédant à l'URL `https://<HEROKU_APP_NAME>.herokuapp.com/sentry-debug` qui génère une exception dans l'application
   - en visualisant l'exception levée dans la section `Issues` du compte Sentry
